@@ -18,11 +18,13 @@ const props = defineProps<{
   users: User[];
   currentUserName: string;
   reactionMessageId: number | null;
+  editingMessageId: number | null;
 }>();
 
 const emit = defineEmits<{
   toggleReaction: [messageId: number, emoji: string];
   requestReaction: [messageId: number];
+  requestEdit: [message: Message];
 }>();
 
 const bottomAnchor = useTemplateRef<HTMLDivElement>("bottom-anchor");
@@ -75,6 +77,7 @@ onMounted(scrollToBottom);
         :reaction-picker-open="reactionMessageId === message.id"
         @toggle-reaction="(emoji) => emit('toggleReaction', message.id, emoji)"
         @request-reaction="emit('requestReaction', message.id)"
+        @request-edit="emit('requestEdit', message)"
       />
       <div
         ref="bottom-anchor"

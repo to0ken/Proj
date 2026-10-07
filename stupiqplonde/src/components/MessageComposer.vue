@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { nextTick, ref, useTemplateRef, watch } from "vue";
 
-import {
-  open
-} from "@tauri-apps/plugin-dialog";
-
+import {open} from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-
 import {fileImage} from "../utils/imageMessage.ts";
+import {Message} from "../types/messages.ts";
 
 const props = defineProps<{
   insertEmoji?: string | null;
   emojiOpen?: boolean;
+  editingMessage?: Message | null;
 }>();
 
 const emit = defineEmits<{
   send: [body: string];
   // sendImage: [path: string];
+  update: [id: number, body: string];
+  cancelEdit: [];
   requestEmoji: [];
   emojiInserted: [];
 }>();
@@ -30,6 +30,20 @@ function rememberCaret() {
   if (!input) return;
   caret.value = input.selectionStart ?? draft.value.length;
 }
+watch(
+    () => props.editingMessage,
+    (msg) => {
+      draft.value = msg?.body ?? "";
+
+      if (msg) {
+        nextTick(() => {
+          inputEl.value?.focus();
+        });
+      }
+    },
+    { immediate: true }
+);
+
 
 watch(
   () => props.insertEmoji,
@@ -49,6 +63,19 @@ watch(
     input.setSelectionRange(caret.value, caret.value);
   },
 );
+function submitMessage() {
+  const body = draft.value.trim();
+  if (!body) return;
+
+  if (props.editingMessage) {
+    emit("update", props.editingMessage.id, body);
+  } else {
+    emit("send", body);
+  }
+
+  draft.value = "";
+  caret.value = 0;
+}
 
 async function pickFile() {
   rememberCaret();
@@ -95,15 +122,7 @@ async function pickFile() {
   emit("send", `${fileImage}${file}`);
 }
 
-function submitMessage() {
-  const body = draft.value.trim();
 
-  if (!body) return;
-
-  emit("send", body);
-  draft.value = "";
-  caret.value = 0;
-}
 </script>
 
 <template>

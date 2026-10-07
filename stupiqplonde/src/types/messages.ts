@@ -7,4 +7,5 @@ export interface Message{
     body: string | null;
     attachments: string | null;
     created_at: string;
+    edited_at?: string | null;
 }

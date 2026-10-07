@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { computed } from "vue";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -25,19 +26,22 @@ const props = defineProps<{
 const emit = defineEmits<{
   toggleReaction: [emoji: string];
   requestReaction: [];
+  requestEdit: [];
 }>();
 
 const reactionGroups = computed(() =>
-  groupReactions(props.reactions, props.currentUserName),
+    groupReactions(props.reactions, props.currentUserName),
 );
 
 const imageSrc = computed(() => {
-  if (!isImageMessage(props.message.body)) return null;
-  return convertFileSrc(getImagePath(props.message.body));
+  const body = props.message.body;
+  if (!body || !isImageMessage(body)) return null;
+
+  return convertFileSrc(getImagePath(body));
 });
 
 const avatarSrc = computed(() =>
-  props.avatar ? convertFileSrc(props.avatar) : "",
+    props.avatar ? convertFileSrc(props.avatar) : "",
 );
 
 function formatTime(value: string) {
@@ -65,30 +69,41 @@ function reactionTitle(group: { authors: string[]; reactedByMe: boolean }) {
 
 <template>
   <div
-    class="message-block"
-    :class="{
+      class="message-block"
+      :class="{
       'message-block--own': isOwn,
       'message-block--picker-open': reactionPickerOpen,
       'message-block--image': !!imageSrc,
     }"
   >
+    <div class="message-actions" v-if="isOwn && message.type !== 'image'">
+      <button
+          type="button"
+          class="message-actions__edit"
+          title="Редактировать"
+          @click="emit('requestEdit')"
+      >
+        ✏️
+      </button>
+    </div>
+
     <div class="quick-reactions">
       <button
-        v-for="emoji in QUICK_REACTIONS"
-        :key="emoji"
-        type="button"
-        class="quick-reactions__btn"
-        :title="`Реакция ${emoji}`"
-        @click="emit('toggleReaction', emoji)"
+          v-for="emoji in QUICK_REACTIONS"
+          :key="emoji"
+          type="button"
+          class="quick-reactions__btn"
+          :title="`Реакция ${emoji}`"
+          @click="emit('toggleReaction', emoji)"
       >
         {{ emoji }}
       </button>
       <button
-        type="button"
-        class="quick-reactions__btn"
-        :class="{ 'quick-reactions__btn--open': reactionPickerOpen }"
-        title="Другая реакция"
-        @click="emit('requestReaction')"
+          type="button"
+          class="quick-reactions__btn"
+          :class="{ 'quick-reactions__btn--open': reactionPickerOpen }"
+          title="Другая реакция"
+          @click="emit('requestReaction')"
       >
         +
       </button>
@@ -97,49 +112,49 @@ function reactionTitle(group: { authors: string[]; reactedByMe: boolean }) {
     <div class="message-row">
       <span class="avatar">
         <img
-          v-if="avatarSrc"
-          :src="avatarSrc"
-          alt=""
+            v-if="avatarSrc"
+            :src="avatarSrc"
+            alt=""
         />
         <span v-else>{{ message.author[0] }}</span>
       </span>
-    <article
-      class="message"
-      :class="{
+      <article
+          class="message"
+          :class="{
         'message--own': isOwn,
         'message--other': !isOwn,
         'message--image': !!imageSrc,
       }"
-    >
-      <img
-        v-if="imageSrc"
-        class="message__image"
-        :src="imageSrc"
-        alt="Изображение"
-      />
-      <p v-else>
-        {{ message.body }}
-      </p>
-      <footer>
-        <span>{{ message.author }}</span>
-        <span>|</span>
-        <span>{{ formatTime(message.created_at) }}</span>
-      </footer>
-    </article>
+      >
+        <img
+            v-if="imageSrc"
+            class="message__image"
+            :src="imageSrc"
+            alt="Изображение"
+        />
+        <p v-else>
+          {{ message.body }}
+        </p>
+        <footer>
+          <span>{{ message.author }}</span>
+          <span>|</span>
+          <span>{{ formatTime(message.created_at) }}</span>
+        </footer>
+      </article>
     </div>
 
     <div
-      v-if="reactionGroups.length"
-      class="reactions"
+        v-if="reactionGroups.length"
+        class="reactions"
     >
       <button
-        v-for="group in reactionGroups"
-        :key="group.emoji"
-        type="button"
-        class="reaction"
-        :class="{ 'reaction--mine': group.reactedByMe }"
-        :title="reactionTitle(group)"
-        @click="emit('toggleReaction', group.emoji)"
+          v-for="group in reactionGroups"
+          :key="group.emoji"
+          type="button"
+          class="reaction"
+          :class="{ 'reaction--mine': group.reactedByMe }"
+          :title="reactionTitle(group)"
+          @click="emit('toggleReaction', group.emoji)"
       >
         <span>{{ group.emoji }}</span>
         <span>{{ group.count }}</span>
@@ -246,11 +261,11 @@ function reactionTitle(group: { authors: string[]; reactedByMe: boolean }) {
 }
 
 .message--own {
-  background: #386be0;
+  background: #d100ff;
 }
 
 .message--other {
-  background: #252830;
+  background: #ffe900;
 }
 
 .message p {
